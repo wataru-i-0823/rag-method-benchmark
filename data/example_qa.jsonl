@@ -1,0 +1,4 @@
+{"id":"q1","question":"休暇申請の承認者は誰ですか","relevant_ids":["leave-policy"]}
+{"id":"q2","question":"高額な経費精算には何が必要ですか","relevant_ids":["expense-policy"]}
+{"id":"q3","question":"機密情報を外部に送る条件は何ですか","relevant_ids":["security-policy"]}
+{"id":"q4","question":"在宅勤務を利用できる日数と連絡先を教えて","relevant_ids":["remote-work"]}

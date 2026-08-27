@@ -1,0 +1,15 @@
+[project]
+name = "rag-method-lab"
+version = "0.1.0"
+description = "Reproducible retrieval evaluation for RAG methods"
+requires-python = ">=3.10"
+
+[project.scripts]
+rag-lab = "rag_lab.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["rag_lab*"]
