@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Callable, Iterable
 
 from .text import cosine, normalise, tokenize
 from .types import Document, SearchResult
@@ -68,6 +68,42 @@ class DenseRetriever(Retriever):
 
     def search(self, query: str, k: int = 5) -> list[SearchResult]:
         return _top(self.documents, self.scores(query), k)
+
+
+def local_hypothetical_document(question: str) -> str:
+    """Deterministic offline fallback; replace with an LLM generator in production."""
+    return f"回答の根拠となる文書。質問: {question}"
+
+
+def local_hypothetical_question(document: Document) -> str:
+    """Index-time fallback for Reverse HyDE, retaining document vocabulary."""
+    return f"{document.title}について何が定められていますか。{document.text}"
+
+
+class HyDERetriever(DenseRetriever):
+    """Generate a document-shaped query at retrieval time, then run dense search."""
+    name = "hyde"
+
+    def __init__(self, documents: list[Document], generator: Callable[[str], str] = local_hypothetical_document):
+        super().__init__(documents)
+        self.generator = generator
+
+    def search(self, query: str, k: int = 5) -> list[SearchResult]:
+        return super().search(self.generator(query), k)
+
+
+class ReverseHyDERetriever(DenseRetriever):
+    """Index hypothetical questions for every document, then retrieve from them."""
+    name = "reverse_hyde"
+
+    def __init__(self, documents: list[Document], generator: Callable[[Document], str] = local_hypothetical_question):
+        super().__init__(documents)
+        self.virtual_questions = [Counter(tokenize(generator(document))) for document in documents]
+        self.question_vectors = [Counter({term: count * self.idf.get(term, 0.0) for term, count in vector.items()}) for vector in self.virtual_questions]
+
+    def scores(self, query: str) -> list[float]:
+        weighted = Counter({term: count * self.idf.get(term, 0.0) for term, count in Counter(tokenize(query)).items()})
+        return [cosine(weighted, vector) for vector in self.question_vectors]
 
 
 class HybridRetriever(Retriever):
@@ -186,7 +222,7 @@ class Corpus2SkillRetriever(DenseRetriever):
 
 
 def build_retriever(name: str, documents: list[Document]) -> Retriever:
-    options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
+    options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
     try:
         return options[name](documents)
     except KeyError as error:

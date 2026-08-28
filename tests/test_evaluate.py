@@ -13,7 +13,7 @@ DOCUMENTS = [
 
 class RetrievalTests(unittest.TestCase):
     def test_all_methods_return_documents(self):
-        for name in "bm25 dense hybrid advanced agentic graph corpus2skill".split():
+        for name in "bm25 dense hyde reverse_hyde hybrid advanced agentic graph corpus2skill".split():
             with self.subTest(method=name):
                 self.assertEqual(build_retriever(name, DOCUMENTS).search("休暇の承認", 1)[0].document.id, "leave")
 

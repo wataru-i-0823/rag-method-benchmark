@@ -8,7 +8,7 @@ from .evaluate import evaluate, write_results
 from .retrievers import build_retriever
 from .types import Document, Question
 
-DEFAULT_METHODS = "bm25,dense,hybrid,advanced,agentic,graph,corpus2skill"
+DEFAULT_METHODS = "bm25,dense,hyde,reverse_hyde,hybrid,advanced,agentic,graph,corpus2skill"
 
 
 def load_documents(path: str) -> list[Document]:
@@ -38,6 +38,9 @@ def main() -> None:
     evaluate_parser.add_argument("--methods", default=DEFAULT_METHODS)
     evaluate_parser.add_argument("--k", type=int, default=3)
     evaluate_parser.add_argument("--output", default="results")
+    evaluate_parser.add_argument("--mlflow", action="store_true", help="Log one MLflow run per method")
+    evaluate_parser.add_argument("--tracking-uri", default="mlruns")
+    evaluate_parser.add_argument("--experiment", default="rag-method-benchmark")
     inspect_parser = commands.add_parser("inspect")
     inspect_parser.add_argument("--corpus", required=True)
     inspect_parser.add_argument("--query", required=True)
@@ -49,6 +52,9 @@ def main() -> None:
         methods = [method.strip() for method in args.methods.split(",") if method.strip()]
         rows, summary = evaluate(documents, load_questions(args.qa), methods, args.k)
         write_results(rows, summary, Path(args.output))
+        if args.mlflow:
+            from .mlflow_tracking import log_experiment
+            log_experiment(rows=rows, summary=summary, corpus_path=args.corpus, qa_path=args.qa, tracking_uri=args.tracking_uri, experiment_name=args.experiment)
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
         results = build_retriever(args.method, documents).search(args.query, args.k)

@@ -8,6 +8,8 @@
 | --- | --- |
 | `bm25` | キーワード検索（ベースライン） |
 | `dense` | TF-IDF ベクトルのコサイン類似度による意味的な近似検索 |
+| `hyde` | 検索時に仮想文書を生成してからDense検索するHyDE |
+| `reverse_hyde` | 文書ごとの仮想質問を事前生成して検索するReverse HyDE |
 | `hybrid` | BM25 と Dense の正規化スコア融合 |
 | `advanced` | Hybrid 検索後にクエリ語の被覆率で再ランキング |
 | `agentic` | 質問を分解し、複数回検索した結果を融合 |
@@ -30,6 +32,18 @@ CSV と JSON の結果を `results/` に保存します。
 python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl \
   --methods bm25,dense,hybrid,advanced,agentic,graph,corpus2skill --k 3 --output results
 ```
+
+## MLflowによる比較
+
+MLflowを有効にすると、手法ごとにRecall@k、MRR、nDCG@k、平均レイテンシを記録します。コーパス本文はMLflowへ送らず、診断用の文書IDだけを保存します。
+
+```bash
+uv sync
+uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --mlflow
+uv run mlflow ui --backend-store-uri mlruns
+```
+
+表示された `http://127.0.0.1:5000` でrunを比較できます。
 
 特定の質問について、各方式が何を取得したかを確認できます。
 
