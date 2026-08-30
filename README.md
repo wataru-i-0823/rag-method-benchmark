@@ -119,6 +119,27 @@ Python 3.11を使います。`chroma_e5`はGoogle Colab GPUで実行します。
 
 ChromaのインデックスはColabの一時ディスク上で毎回再構築します。元文書と設定から再現できるため、DBファイルを同期するより安全です。Google Drive上の実データはGitHubへ追加しないでください。
 
+### 実行環境の切替
+
+検索手法と実行環境は別の変数です。`--profile`で切り替えられます。
+
+| プロファイル | 想定場所 | 埋め込み | 用途 |
+| --- | --- | --- | --- |
+| `local` | 手元PC | `chroma_hash`（依存なし） | 取り込み・検索手法・評価の学習 |
+| `colab` | Google Colab GPU | `multilingual-e5-small` | 実用的な意味検索の検証 |
+| `cloud` | VM／コンテナ | `multilingual-e5-small` | 本番に近い継続実行。永続ボリュームを指定 |
+
+```bash
+# 手元PC: APIキー・GPUなしで全体を動かす
+uv run python -m rag_lab evaluate --profile local --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl
+
+# Colab: E5を使う（Colabノートブックでは --extra colab をインストール済み）
+uv run python -m rag_lab evaluate --profile colab --corpus corpus.jsonl --qa qa.jsonl
+
+# クラウド: Chroma永続領域を明示する
+uv run python -m rag_lab evaluate --profile cloud --chroma-path /mnt/rag/chroma --corpus corpus.jsonl --qa qa.jsonl
+```
+
 ```bash
 python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --k 3
 ```

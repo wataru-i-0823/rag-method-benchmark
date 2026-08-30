@@ -21,3 +21,7 @@ class RetrievalTests(unittest.TestCase):
         _, summary = evaluate(DOCUMENTS, [Question("q", "休暇の承認", ("leave",))], ["hybrid"], 1)
         self.assertEqual(summary["hybrid"]["recall_at_k"], 1.0)
         self.assertEqual(summary["hybrid"]["mrr"], 1.0)
+
+    def test_local_chroma_profile_uses_persistent_vector_store(self):
+        results = build_retriever("chroma_hash", DOCUMENTS, chroma_path="/tmp/rag_lab_test_chroma").search("休暇の承認", 1)
+        self.assertEqual(results[0].document.id, "leave")

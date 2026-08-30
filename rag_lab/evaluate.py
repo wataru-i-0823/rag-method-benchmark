@@ -9,11 +9,11 @@ from .retrievers import build_retriever
 from .types import Document, Question, SearchResult
 
 
-def evaluate(documents: list[Document], questions: list[Question], methods: list[str], k: int, langsmith: bool = False) -> tuple[list[dict], dict]:
+def evaluate(documents: list[Document], questions: list[Question], methods: list[str], k: int, langsmith: bool = False, retriever_options: dict | None = None) -> tuple[list[dict], dict]:
     rows: list[dict] = []
     summary: dict[str, dict] = {}
     for method in methods:
-        retriever = build_retriever(method, documents)
+        retriever = build_retriever(method, documents, **(retriever_options or {}))
         traced = None
         if langsmith:
             from .langsmith_tracking import traced_search

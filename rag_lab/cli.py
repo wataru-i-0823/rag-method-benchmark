@@ -5,11 +5,9 @@ import json
 from pathlib import Path
 
 from .evaluate import evaluate, write_results
+from .profiles import PROFILES, get_profile
 from .retrievers import build_retriever
 from .types import Document, Question
-
-DEFAULT_METHODS = "bm25,dense,chroma_e5,hyde,reverse_hyde,hybrid,advanced,agentic,langgraph_agentic,graph,corpus2skill"
-
 
 def load_documents(path: str) -> list[Document]:
     return [Document(id=row["id"], text=row["text"], title=row.get("title", "")) for row in _jsonl(path)]
@@ -35,7 +33,9 @@ def main() -> None:
     evaluate_parser = commands.add_parser("evaluate")
     evaluate_parser.add_argument("--corpus", required=True)
     evaluate_parser.add_argument("--qa", required=True)
-    evaluate_parser.add_argument("--methods", default=DEFAULT_METHODS)
+    evaluate_parser.add_argument("--profile", choices=sorted(PROFILES), default="local", help="Execution environment profile (default: local)")
+    evaluate_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    evaluate_parser.add_argument("--methods", help="Comma-separated methods; defaults to the selected profile")
     evaluate_parser.add_argument("--k", type=int, default=3)
     evaluate_parser.add_argument("--output", default="results")
     evaluate_parser.add_argument("--mlflow", action="store_true", help="Log one MLflow run per method")
@@ -46,23 +46,32 @@ def main() -> None:
     inspect_parser = commands.add_parser("inspect")
     inspect_parser.add_argument("--corpus", required=True)
     inspect_parser.add_argument("--query", required=True)
-    inspect_parser.add_argument("--method", default="hybrid")
+    inspect_parser.add_argument("--profile", choices=sorted(PROFILES), default="local")
+    inspect_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    inspect_parser.add_argument("--method")
     inspect_parser.add_argument("--k", type=int, default=3)
     args = parser.parse_args()
     documents = load_documents(args.corpus)
+    profile = get_profile(args.profile)
+    retriever_options = {
+        "chroma_path": args.chroma_path or profile.chroma_path,
+        "embedding_device": profile.embedding_device,
+    }
     if args.command == "evaluate":
         if args.framework:
             from .frameworks import framework_documents
             documents = framework_documents(documents, args.framework)
-        methods = [method.strip() for method in args.methods.split(",") if method.strip()]
-        rows, summary = evaluate(documents, load_questions(args.qa), methods, args.k, langsmith=args.langsmith)
+        selected_methods = args.methods or profile.default_methods
+        methods = [method.strip() for method in selected_methods.split(",") if method.strip()]
+        rows, summary = evaluate(documents, load_questions(args.qa), methods, args.k, langsmith=args.langsmith, retriever_options=retriever_options)
         write_results(rows, summary, Path(args.output))
         if args.mlflow:
             from .mlflow_tracking import log_experiment
             log_experiment(rows=rows, summary=summary, corpus_path=args.corpus, qa_path=args.qa, tracking_uri=args.tracking_uri, experiment_name=args.experiment)
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
-        results = build_retriever(args.method, documents).search(args.query, args.k)
+        method = args.method or ("chroma_e5" if args.profile in {"colab", "cloud"} else "hybrid")
+        results = build_retriever(method, documents, **retriever_options).search(args.query, args.k)
         print(json.dumps([{"id": result.document.id, "title": result.document.title, "score": round(result.score, 4), "text": result.document.text} for result in results], ensure_ascii=False, indent=2))
 
 

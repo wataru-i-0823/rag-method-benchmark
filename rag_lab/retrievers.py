@@ -230,10 +230,18 @@ class Corpus2SkillRetriever(DenseRetriever):
         return chosen or all_results[:k]
 
 
-def build_retriever(name: str, documents: list[Document]) -> Retriever:
+def build_retriever(
+    name: str,
+    documents: list[Document],
+    chroma_path: str = "data/chroma",
+    embedding_device: str | None = "auto",
+) -> Retriever:
     if name in {"chroma_e5", "chroma_local"}:
         from .chroma_store import ChromaE5Retriever
-        return ChromaE5Retriever(documents)  # type: ignore[return-value]
+        return ChromaE5Retriever(documents, path=chroma_path, device=embedding_device)  # type: ignore[return-value]
+    if name == "chroma_hash":
+        from .chroma_store import ChromaHashRetriever
+        return ChromaHashRetriever(documents, path=chroma_path)  # type: ignore[return-value]
     options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, LangGraphAgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
     try:
         return options[name](documents)
