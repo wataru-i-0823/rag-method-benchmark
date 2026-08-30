@@ -1,25 +1,25 @@
 ---
 name: rag-lab-workflow
-description: Build or modify the RAG Method Benchmark, including retrieval experiments, MLflow evaluation, Colab execution, and safe public-repository handling. Use for this repository's RAG lab work, not generic RAG questions.
+description: RAG手法比較ラボの検索実験、MLflow評価、Colab実行、公開リポジトリの安全な運用を実装・変更する。一般的なRAGの質問ではなく、このリポジトリの作業時に使う。
 ---
 
-# RAG Lab Workflow
+# RAG手法比較ラボの作業手順
 
-Maintain this project as a reproducible comparison lab, not as a single fixed RAG application.
+このプロジェクトは、単一の固定RAGアプリではなく、再現可能な比較実験ラボとして維持する。
 
-## Core workflow
+## 基本手順
 
-- Identify the experimental layer being changed: ingestion/chunking, embeddings, vector store, retrieval method, orchestration, or evaluation. Avoid silently changing more than one layer in a comparison.
-- Use `--profile local`, `--profile colab`, or `--profile cloud` to choose an execution environment. Read [execution profiles](references/execution-profiles.md) before changing profile behavior.
-- Keep a no-key local path usable. Use the Colab profile for `multilingual-e5-small` and GPU work; it must degrade to CPU only when a GPU is unavailable.
-- Add a deterministic test for changes to retrievers, profiles, or metrics. Use `uv` and run the unit suite before handoff.
+- 変更する実験レイヤーを特定する。対象は、取り込み／チャンク分割、埋め込み、ベクトルストア、検索手法、オーケストレーション、評価である。比較の際に複数レイヤーを黙って同時変更しない。
+- 実行環境は`--profile local`、`--profile colab`、`--profile cloud`で選ぶ。プロファイルの挙動を変更する場合は、[実行プロファイル](references/execution-profiles.md) を読む。
+- APIキーなしで実行できるローカル経路を保つ。`multilingual-e5-small`とGPU作業にはColabプロファイルを使い、GPUがない場合はCPUへフォールバックできるようにする。
+- Retriever、プロファイル、評価指標を変更した場合は決定論的なテストを追加する。引き渡し前に`uv`を使ってユニットテストを実行する。
 
-## Data and publication safety
+## データと公開の安全性
 
-- Never add corpus contents, Chroma indexes, MLflow runs, `.env`, or credentials to Git. The repository is public.
-- In Colab, persist raw/processed data and results in the configured Google Drive lab directory. Recreate Chroma from source documents on a new runtime.
-- A ChatGPT, Claude, or Gemini app subscription is not an API credential. Do not add or assume an API key unless the user explicitly provides and authorizes it.
+- コーパス内容、Chromaインデックス、MLflowのrun、`.env`、認証情報をGitへ追加しない。リポジトリは公開である。
+- Colabでは、元データ／処理済みデータ／結果を指定されたGoogle Driveのラボ用ディレクトリに保存する。新しいランタイムでは、元文書からChromaを作り直す。
+- ChatGPT、Claude、Geminiのアプリ契約はAPI認証情報ではない。ユーザーが明示して認可するまで、APIキーを追加・仮定しない。
 
-## Documentation
+## ドキュメント
 
-When a user-facing runtime choice changes, update the README and, when relevant, the Colab notebook. State which computation is local, Colab, or cloud, and which files are intentionally not tracked.
+ユーザーが選べる実行環境を変更した場合は、READMEと必要に応じてColabノートブックを更新する。どの計算がローカル、Colab、クラウドで実行されるか、どのファイルを意図的に追跡しないかを明記する。
