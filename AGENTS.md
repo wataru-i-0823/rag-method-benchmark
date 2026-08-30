@@ -1,6 +1,6 @@
 # RAG手法比較ラボ — エージェントガイド
 
-RAGの取り込み、検索、評価、実行環境、Colabワークフローを変更する作業では、最初に [`skills/rag-lab-workflow/SKILL.md`](skills/rag-lab-workflow/SKILL.md) を読むこと。
+RAGの取り込み、検索、評価、実行環境、Colabワークフローを変更する作業では、最初に [`.agent/skills/rag-lab-workflow/SKILL.md`](.agent/skills/rag-lab-workflow/SKILL.md) を読むこと。
 
 ## プロジェクトの境界
 
