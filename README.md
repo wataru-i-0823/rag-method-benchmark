@@ -23,8 +23,7 @@
 | 実装 | 役割 |
 | --- | --- |
 | TF-IDF | 依存なしの再現可能なベースライン |
-| ローカル・ハッシュ埋め込み | Intel MacでChromaの動作を検証するための暫定実装 |
-| `multilingual-e5-small` | 対応環境またはAPI接続後に追加する本命の多言語埋め込み |
+| `multilingual-e5-small` | Colab GPUで動かす本命の多言語埋め込み。クエリ／文書をE5推奨の接頭辞付きでベクトル化 |
 
 ### 3. 検索データベース
 
@@ -45,7 +44,7 @@
 | `reverse_hyde` | 文書ごとの仮想質問を事前生成して検索 |
 | `graph` | エンティティ共有グラフで候補を拡張 |
 | `corpus2skill` | 階層スキルツリーを探索 |
-| `chroma_local` | Chroma永続ストアへのDense検索 |
+| `chroma_e5` | `multilingual-e5-small` で埋め込んだChroma永続Dense検索 |
 
 ### 5. 制御フロー
 
@@ -61,11 +60,64 @@
 | MLflow | 方式／構成ごとの集計指標、パラメータ、レイテンシ比較 |
 | LangSmith | 質問単位の検索トレースと失敗原因分析 |
 
+## フレームワーク構成図
+
+```mermaid
+flowchart LR
+    A[コーパス JSONL] --> B{取り込み・分割}
+    B -->|LangChain| C[RecursiveCharacterTextSplitter]
+    B -->|LlamaIndex| D[SentenceSplitter / Nodes]
+    B -->|ベースライン| E[文書そのまま]
+    C --> F[埋め込み]
+    D --> F
+    E --> F
+    F -->|TF-IDF / ローカル埋め込み| G{検索ストア}
+    G -->|インメモリ| H[自前 Retriever]
+    G -->|Chroma| I[Chroma PersistentClient]
+    H --> J{検索・拡張}
+    I --> J
+    J --> K[BM25 / Dense / Hybrid]
+    J --> L[HyDE / Reverse HyDE]
+    J --> M[Graph / Corpus2Skill]
+    K --> N{制御フロー}
+    L --> N
+    M --> N
+    N -->|固定パイプライン| O[検索結果]
+    N -->|LangGraph| P[Agentic RAG: 検索・再検索・検証]
+    P --> O
+    O --> Q[MLflow: 集計比較]
+    O --> R[LangSmith: 質問単位トレース]
+```
+
+### 比較実験で固定・変更するもの
+
+```mermaid
+flowchart TB
+    F[固定する条件] --> F1[コーパス]
+    F --> F2[評価質問と正解ラベル]
+    F --> F3[k・評価指標]
+    V[一度に一つずつ変更する条件] --> V1[分割器]
+    V --> V2[埋め込みモデル]
+    V --> V3[検索DB]
+    V --> V4[検索・拡張手法]
+    V --> V5[制御フロー]
+```
+
 これは再現可能な比較用実装です。LLM による回答生成や外部 Embedding API を接続する前に、各方式の**検索精度**（Recall@k / MRR / nDCG@k）を公平に測れます。
 
 ## 実行
 
-Python 3.10 以降のみで動きます。
+Python 3.11を使います。`chroma_e5`はGoogle Colab GPUで実行します。初回だけE5モデルをダウンロードします。APIキーも料金も不要です。
+
+### Google Colab（推奨）
+
+[`notebooks/rag_lab_colab.ipynb`](notebooks/rag_lab_colab.ipynb) をGoogle Colabで開き、上から順に実行してください。ノートブックはGoogle Driveの`MyDrive/rag-method-lab/`をデータ置き場にします。
+
+- `raw/`: 元文書
+- `processed/`: 前処理済みデータ
+- `mlruns/`: MLflowの実験結果
+
+ChromaのインデックスはColabの一時ディスク上で毎回再構築します。元文書と設定から再現できるため、DBファイルを同期するより安全です。Google Drive上の実データはGitHubへ追加しないでください。
 
 ```bash
 python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --k 3

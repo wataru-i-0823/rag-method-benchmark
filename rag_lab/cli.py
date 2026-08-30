@@ -8,7 +8,7 @@ from .evaluate import evaluate, write_results
 from .retrievers import build_retriever
 from .types import Document, Question
 
-DEFAULT_METHODS = "bm25,dense,chroma_local,hyde,reverse_hyde,hybrid,advanced,agentic,langgraph_agentic,graph,corpus2skill"
+DEFAULT_METHODS = "bm25,dense,chroma_e5,hyde,reverse_hyde,hybrid,advanced,agentic,langgraph_agentic,graph,corpus2skill"
 
 
 def load_documents(path: str) -> list[Document]:

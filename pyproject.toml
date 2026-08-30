@@ -2,7 +2,7 @@
 name = "rag-method-lab"
 version = "0.1.0"
 description = "Reproducible retrieval evaluation for RAG methods"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.12"
 dependencies = [
   "chromadb>=0.5.23,<0.6",
   "langsmith>=0.4,<1.0",
@@ -12,6 +12,12 @@ dependencies = [
   "llama-index-core>=0.12,<1.0",
   "mlflow>=3.0,<4.0",
   "onnxruntime>=1.17,<1.20",
+]
+
+[project.optional-dependencies]
+# Google Colab (Linux) で使用するGPU対応の埋め込みバックエンド。
+colab = [
+  "sentence-transformers>=3.0,<6.0 ; platform_system != 'Darwin' or platform_machine != 'x86_64'",
 ]
 
 [project.scripts]
