@@ -2,19 +2,64 @@
 
 同じコーパスと正解付き質問セットに対して複数の RAG 検索戦略を実行し、検索精度を比較するための軽量な実験基盤です。
 
-## 対象手法
+## 比較対象の整理
 
-| 名前 | 内容 |
+このラボでは、次の層を**別々の実験変数**として扱います。たとえば「ChromaだからHyDE」ではなく、`Chroma × HyDE × LangGraph` のように組み合わせて比較します。
+
+```text
+文書取り込み・分割 → 埋め込み → 検索DB → 検索／拡張手法 → 制御フロー → 評価
+```
+
+### 1. 文書取り込み・分割
+
+| 実装 | 役割 |
 | --- | --- |
-| `bm25` | キーワード検索（ベースライン） |
-| `dense` | TF-IDF ベクトルのコサイン類似度による意味的な近似検索 |
-| `hyde` | 検索時に仮想文書を生成してからDense検索するHyDE |
-| `reverse_hyde` | 文書ごとの仮想質問を事前生成して検索するReverse HyDE |
-| `hybrid` | BM25 と Dense の正規化スコア融合 |
-| `advanced` | Hybrid 検索後にクエリ語の被覆率で再ランキング |
-| `agentic` | 質問を分解し、複数回検索した結果を融合 |
-| `graph` | 文書から抽出したエンティティ共有グラフで候補を拡張 |
-| `corpus2skill` | 文書を階層スキルツリーへコンパイルし、ツリーを探索して取得 |
+| 自前 | 文書をそのまま扱うベースライン |
+| LangChain | `RecursiveCharacterTextSplitter` による再帰的分割 |
+| LlamaIndex | `SentenceSplitter` によるNode化 |
+
+### 2. 埋め込みモデル
+
+| 実装 | 役割 |
+| --- | --- |
+| TF-IDF | 依存なしの再現可能なベースライン |
+| ローカル・ハッシュ埋め込み | Intel MacでChromaの動作を検証するための暫定実装 |
+| `multilingual-e5-small` | 対応環境またはAPI接続後に追加する本命の多言語埋め込み |
+
+### 3. 検索データベース
+
+| 実装 | 役割 |
+| --- | --- |
+| インメモリ | 自前Retrieverの比較用 |
+| Chroma | ローカル永続ベクトルDB。`data/chroma/` に保存しGit除外 |
+
+### 4. 検索・検索拡張手法
+
+| `--method` | 内容 |
+| --- | --- |
+| `bm25` | キーワード検索 |
+| `dense` | TF-IDFコサイン類似度検索 |
+| `hybrid` | BM25とDenseのスコア融合 |
+| `advanced` | Hybrid後の被覆率ベース再ランキング |
+| `hyde` | 検索時に仮想文書を生成してDense検索 |
+| `reverse_hyde` | 文書ごとの仮想質問を事前生成して検索 |
+| `graph` | エンティティ共有グラフで候補を拡張 |
+| `corpus2skill` | 階層スキルツリーを探索 |
+| `chroma_local` | Chroma永続ストアへのDense検索 |
+
+### 5. 制御フロー
+
+| 実装 | 役割 |
+| --- | --- |
+| `agentic` | 質問を分解し、複数検索結果を融合 |
+| `langgraph_agentic` | LangGraphの`StateGraph`で検索ステップを制御 |
+
+### 6. 観測・評価
+
+| ツール | 役割 |
+| --- | --- |
+| MLflow | 方式／構成ごとの集計指標、パラメータ、レイテンシ比較 |
+| LangSmith | 質問単位の検索トレースと失敗原因分析 |
 
 これは再現可能な比較用実装です。LLM による回答生成や外部 Embedding API を接続する前に、各方式の**検索精度**（Recall@k / MRR / nDCG@k）を公平に測れます。
 
@@ -35,6 +80,21 @@ python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_
 
 ## MLflowによる比較
 
+## フレームワーク実装の利用
+
+- **LangChain**：`RecursiveCharacterTextSplitter` によるチャンク化、Chroma連携
+- **LangGraph**：Agentic RAGの検索・再検索・検証フロー
+- **LlamaIndex**：文書をNodeへ変換するインジェストパイプライン
+
+`rag_lab.frameworks` に、APIキーなしで実行できる各ライブラリの参照実装を置いています。
+
+同一コーパスで分割方式を比較する例：
+
+```bash
+uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --framework langchain
+uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --framework llamaindex
+```
+
 MLflowを有効にすると、手法ごとにRecall@k、MRR、nDCG@k、平均レイテンシを記録します。コーパス本文はMLflowへ送らず、診断用の文書IDだけを保存します。
 
 ```bash
@@ -44,6 +104,16 @@ uv run mlflow ui --backend-store-uri mlruns
 ```
 
 表示された `http://127.0.0.1:5000` でrunを比較できます。
+
+## LangSmithによるトレース
+
+検索経路を質問単位で追跡する場合は、`.env.example` を `.env` としてコピーし、**Gitに含めず** `LANGSMITH_API_KEY` を設定します。
+
+```bash
+uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --langsmith
+```
+
+MLflowは方式別の集計比較、LangSmithは個別質問の検索トレースと失敗分析に使います。
 
 特定の質問について、各方式が何を取得したかを確認できます。
 

@@ -7,6 +7,7 @@
 | `raw/` | 原本（PDF変換前テキスト、CSV、JSONLなど） | しない |
 | `processed/` | チャンク化・正規化済みコーパス | しない |
 | `evaluation/` | 実データ向け質問・正解ラベル | しない |
+| `chroma/` | Chromaのローカル永続インデックス | しない |
 | 直下の `example_*.jsonl` | 動作確認用の架空データ | する |
 
 コーパスはJSONLで各行に `id`、`text`、任意で `title` を含めます。

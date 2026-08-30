@@ -1,4 +1,7 @@
 .venv/
+.env
+.env.*
+!.env.example
 __pycache__/
 *.egg-info/
 results/
@@ -9,3 +12,4 @@ data/processed/*
 data/evaluation/*
 !data/evaluation/.gitkeep
 mlruns/
+data/chroma/

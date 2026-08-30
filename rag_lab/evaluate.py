@@ -6,23 +6,33 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .retrievers import build_retriever
-from .types import Document, Question
+from .types import Document, Question, SearchResult
 
 
-def evaluate(documents: list[Document], questions: list[Question], methods: list[str], k: int) -> tuple[list[dict], dict]:
+def evaluate(documents: list[Document], questions: list[Question], methods: list[str], k: int, langsmith: bool = False) -> tuple[list[dict], dict]:
     rows: list[dict] = []
     summary: dict[str, dict] = {}
     for method in methods:
         retriever = build_retriever(method, documents)
+        traced = None
+        if langsmith:
+            from .langsmith_tracking import traced_search
+            traced = traced_search(retriever, method)
         totals: defaultdict[str, float] = defaultdict(float)
         for question in questions:
             started = time.perf_counter()
-            results = retriever.search(question.question, k)
+            if traced:
+                traced_results = traced(question.question, k)
+                lookup = {document.id: document for document in documents}
+                results = [SearchResult(lookup[item["document_id"]], item["score"]) for item in traced_results]
+            else:
+                results = retriever.search(question.question, k)
             elapsed = (time.perf_counter() - started) * 1000
             retrieved = [result.document.id for result in results]
+            retrieved_source_ids = [doc_id.split(":", 1)[0] for doc_id in retrieved]
             relevant = set(question.relevant_ids)
-            hit_ranks = [index for index, doc_id in enumerate(retrieved, start=1) if doc_id in relevant]
-            recall = len(set(retrieved) & relevant) / len(relevant)
+            hit_ranks = [index for index, doc_id in enumerate(retrieved_source_ids, start=1) if doc_id in relevant]
+            recall = len(set(retrieved_source_ids) & relevant) / len(relevant)
             reciprocal_rank = 1 / hit_ranks[0] if hit_ranks else 0.0
             dcg = sum(1 / math_log2(rank + 1) for rank in hit_ranks)
             ideal = sum(1 / math_log2(rank + 1) for rank in range(1, min(k, len(relevant)) + 1))

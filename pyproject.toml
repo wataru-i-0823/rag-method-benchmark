@@ -3,7 +3,16 @@ name = "rag-method-lab"
 version = "0.1.0"
 description = "Reproducible retrieval evaluation for RAG methods"
 requires-python = ">=3.10"
-dependencies = ["mlflow>=3.0,<4.0"]
+dependencies = [
+  "chromadb>=0.5.23,<0.6",
+  "langsmith>=0.4,<1.0",
+  "langchain-chroma>=0.2,<1.0",
+  "langchain-text-splitters>=0.3,<2.0",
+  "langgraph>=0.3,<2.0",
+  "llama-index-core>=0.12,<1.0",
+  "mlflow>=3.0,<4.0",
+  "onnxruntime>=1.17,<1.20",
+]
 
 [project.scripts]
 rag-lab = "rag_lab.cli:main"

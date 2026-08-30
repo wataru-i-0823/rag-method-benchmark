@@ -8,7 +8,7 @@ from .evaluate import evaluate, write_results
 from .retrievers import build_retriever
 from .types import Document, Question
 
-DEFAULT_METHODS = "bm25,dense,hyde,reverse_hyde,hybrid,advanced,agentic,graph,corpus2skill"
+DEFAULT_METHODS = "bm25,dense,chroma_local,hyde,reverse_hyde,hybrid,advanced,agentic,langgraph_agentic,graph,corpus2skill"
 
 
 def load_documents(path: str) -> list[Document]:
@@ -41,6 +41,8 @@ def main() -> None:
     evaluate_parser.add_argument("--mlflow", action="store_true", help="Log one MLflow run per method")
     evaluate_parser.add_argument("--tracking-uri", default="mlruns")
     evaluate_parser.add_argument("--experiment", default="rag-method-benchmark")
+    evaluate_parser.add_argument("--langsmith", action="store_true", help="Trace retrieval calls to LangSmith")
+    evaluate_parser.add_argument("--framework", choices=["langchain", "llamaindex"], help="Chunk documents with the selected RAG framework before indexing")
     inspect_parser = commands.add_parser("inspect")
     inspect_parser.add_argument("--corpus", required=True)
     inspect_parser.add_argument("--query", required=True)
@@ -49,8 +51,11 @@ def main() -> None:
     args = parser.parse_args()
     documents = load_documents(args.corpus)
     if args.command == "evaluate":
+        if args.framework:
+            from .frameworks import framework_documents
+            documents = framework_documents(documents, args.framework)
         methods = [method.strip() for method in args.methods.split(",") if method.strip()]
-        rows, summary = evaluate(documents, load_questions(args.qa), methods, args.k)
+        rows, summary = evaluate(documents, load_questions(args.qa), methods, args.k, langsmith=args.langsmith)
         write_results(rows, summary, Path(args.output))
         if args.mlflow:
             from .mlflow_tracking import log_experiment

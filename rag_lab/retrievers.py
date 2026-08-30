@@ -154,6 +154,15 @@ class AgenticRetriever(HybridRetriever):
         return sorted(results, key=lambda item: item.score, reverse=True)[:k]
 
 
+class LangGraphAgenticRetriever(AgenticRetriever):
+    """Agentic retrieval orchestrated with a compiled LangGraph StateGraph."""
+    name = "langgraph_agentic"
+
+    def search(self, query: str, k: int = 5) -> list[SearchResult]:
+        from .frameworks import agentic_search_with_langgraph
+        return agentic_search_with_langgraph(super(), query, k)
+
+
 class GraphRetriever(HybridRetriever):
     name = "graph"
 
@@ -222,7 +231,10 @@ class Corpus2SkillRetriever(DenseRetriever):
 
 
 def build_retriever(name: str, documents: list[Document]) -> Retriever:
-    options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
+    if name == "chroma_local":
+        from .chroma_store import ChromaE5Retriever
+        return ChromaE5Retriever(documents)  # type: ignore[return-value]
+    options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, LangGraphAgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
     try:
         return options[name](documents)
     except KeyError as error:
