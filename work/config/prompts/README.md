@@ -8,6 +8,8 @@
 | `reverse_hyde_ja.md` | 文書ごとの仮想質問生成 | `title`, `context` |
 | `rag_answer_ja.md` | 根拠付き最終回答 | `question`, `contexts` |
 | `corpus2skill_cluster_summary_ja.md` | クラスタ／Skillノードの要約 | `contexts` |
+| `corpus2skill_document_analysis_ja.md` | チャンクを知識単位へ前処理 | `source_id`, `title`, `page_number`, `context` |
+| `corpus2skill_skill_synthesis_ja.md` | 知識単位から最終Skillを生成 | `analyses` |
 | `graphrag_triple_extraction_ja.md` | エンティティ・関係抽出 | `source_id`, `page_number`, `context` |
 | `graphrag_community_summary_ja.md` | グラフコミュニティの要約 | `entities`, `relationships` |
 

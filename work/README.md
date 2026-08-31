@@ -200,7 +200,7 @@ python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.js
 
 ## LLMプロンプト
 
-HyDE、Reverse HyDE、根拠付き回答、Corpus2Skill、GraphRAG向けの日本語プロンプトは[`config/prompts/`](config/prompts/)で管理します。現時点の無料検索器は決定論的な代替実装を使うため、これらのプロンプトはAPIまたはColab上のローカルLLMを接続した時点で有効にします。利用変数と比較上の注意は[`config/prompts/README.md`](config/prompts/README.md)を参照してください。
+HyDE、Reverse HyDE、根拠付き回答、Corpus2Skill、GraphRAG向けの日本語プロンプトは[`config/prompts/`](config/prompts/)で管理します。現時点の無料検索器は決定論的な代替実装を使うため、これらのプロンプトはAPIまたはColab上のローカルLLMを接続した時点で有効にします。利用変数と比較上の注意は[`config/prompts/README.md`](config/prompts/README.md)を参照してください。Corpus2SkillのLLM前処理設定は[`config/corpus2skill.json`](config/corpus2skill.json)に分離しています。
 
 ## フレームワーク実装の利用
 
@@ -260,7 +260,7 @@ python -m rag_lab inspect --corpus data/processed/fsa_boj_public_information.jso
 
 ## Corpus2Skill の解釈
 
-`corpus2skill` は、文書を語彙ベクトルで類似するトピックに再帰的にまとめ、各ノードに `SKILL.md` 相当の要約を作る簡易実装です。問い合わせ時にはツリーの各階層で最も関連する枝だけをたどり、葉の文書を返します。研究版の LLM 要約・クラスタリングへ置換できるよう `Corpus2SkillRetriever` を独立させています。
+`corpus2skill` は、文書を語彙ベクトルで類似するトピックに再帰的にまとめ、各ノードにキーワードラベルを付ける簡易実装です。問い合わせ時にはツリーの各階層で最も関連する枝だけをたどり、葉の文書を返します。LLM版では`config/corpus2skill.json`の設定に従い、チャンク分析 → クラスタ要約 → Skill統合を行い、各Skillに根拠チャンクIDを残します。
 
 ## 比較時の注意
 

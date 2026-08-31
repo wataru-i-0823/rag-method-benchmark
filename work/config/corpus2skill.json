@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "mode": "planned_llm_preprocessing",
+  "source_unit": "chunk",
+  "document_analysis_prompt": "config/prompts/corpus2skill_document_analysis_ja.md",
+  "cluster_summary_prompt": "config/prompts/corpus2skill_cluster_summary_ja.md",
+  "skill_synthesis_prompt": "config/prompts/corpus2skill_skill_synthesis_ja.md",
+  "cluster_strategy": "embedding",
+  "max_children_per_skill": 4,
+  "output_path": "data/processed/corpus2skill/",
+  "provenance_required": true,
+  "uncertainty_policy": "根拠にない内容を補完せず、limitationsへ記録する"
+}
