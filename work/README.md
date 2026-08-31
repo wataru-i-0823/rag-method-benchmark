@@ -26,6 +26,7 @@ Google Colabでは、`notebooks/rag_lab_colab.ipynb`を開きます。コーパ�
 | 自前 | 文書をそのまま扱うベースライン |
 | LangChain | `RecursiveCharacterTextSplitter` による再帰的分割 |
 | LlamaIndex | `SentenceSplitter` によるNode化 |
+| PDF取込 | PyMuPDFで文字層を直接抽出し、不足ページだけPaddleOCR（任意）でOCR |
 
 ### 2. 埋め込みモデル
 
@@ -128,6 +129,8 @@ Python 3.11を使います。`chroma_e5`はGoogle Colab GPUで実行します。
 - `mlruns/`: MLflowの実験結果
 
 ChromaのインデックスはColabの一時ディスク上で毎回再構築します。元文書と設定から再現できるため、DBファイルを同期するより安全です。Google Drive上の実データはGitHubへ追加しないでください。
+
+PDFはまずPyMuPDFで直接抽出します。画像だけのページは、`uv sync --extra ocr`後に`python scripts/ingest_pdfs.py --ocr-backend paddle ...`で日本語PaddleOCRへフォールバックできます。詳しい手順は[`data/README.md`](data/README.md)を参照してください。
 
 ### 実行環境の切替
 

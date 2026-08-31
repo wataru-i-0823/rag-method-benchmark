@@ -9,6 +9,8 @@
 | `evaluation/` | 実データ向け質問・正解ラベル | しない |
 | `chroma/` | Chromaのローカル永続インデックス | しない |
 
+PDF原本は`raw/`に置きます。`scripts/ingest_pdfs.py`はまずPyMuPDFでPDF内部の文字を直接抽出し、文字が不足するページだけ任意でPaddleOCRを実行します。抽出済みJSONLも`processed/`に保存され、いずれもGit管理しません。
+
 コーパスはJSONLで各行に `id`、`text`、任意で `title` を含めます。
 
 ```json
@@ -42,3 +44,23 @@ uv run python -m rag_lab inspect --profile local \
 ```
 
 精度評価を行う際は、`evaluation/`に質問と正解文書IDを自分で作成し、`evaluate`コマンドへ渡します。これらのファイルもGitには追加しません。
+
+## PDFを取り込む
+
+文字情報を持つPDFでは、OCRを使わずPyMuPDFの抽出結果を使います。
+
+```bash
+uv sync
+uv run python scripts/ingest_pdfs.py data/raw/financial-report.pdf \
+  --output data/processed/financial-report.jsonl
+```
+
+スキャンPDFなど、80文字未満しか取得できないページだけを日本語PaddleOCRで認識するには、Colab/LinuxでOCR追加依存関係を入れます。
+
+```bash
+uv sync --extra ocr
+uv run python scripts/ingest_pdfs.py --input-dir data/raw/pdfs \
+  --ocr-backend paddle --output data/processed/pdf_corpus.jsonl
+```
+
+出力の各行には`source_file`、`page_number`、`extraction_method`（`pymupdf`または`paddleocr`）を記録します。PDFの版やページを追跡できるよう、この情報は削除しないでください。

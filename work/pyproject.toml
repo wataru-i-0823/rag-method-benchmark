@@ -12,12 +12,18 @@ dependencies = [
   "llama-index-core>=0.12,<1.0",
   "mlflow>=3.0,<4.0",
   "onnxruntime>=1.17,<1.20",
+  "pymupdf>=1.25,<2.0",
 ]
 
 [project.optional-dependencies]
 # Google Colab (Linux) で使用するGPU対応の埋め込みバックエンド。
 colab = [
   "sentence-transformers>=3.0,<6.0 ; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+]
+# スキャンPDFの日本語OCR。Google Colab/Linuxでのみ有効化する。
+ocr = [
+  "paddlepaddle>=2.6,<3.0 ; platform_system != 'Darwin' or platform_machine != 'x86_64'",
+  "paddleocr>=2.9,<3.0 ; platform_system != 'Darwin' or platform_machine != 'x86_64'",
 ]
 
 [project.scripts]
