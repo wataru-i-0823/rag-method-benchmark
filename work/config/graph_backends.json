@@ -1,0 +1,31 @@
+{
+  "active_backend": "semantic_e5",
+  "backends": {
+    "semantic_e5": {
+      "kind": "semantic",
+      "graph_path": "data/graph/semantic_graph.sqlite",
+      "embedding_model": "e5-small",
+      "similarity_threshold": 0.35,
+      "max_neighbors_per_chunk": 5
+    },
+    "semantic_bge_m3": {
+      "kind": "semantic",
+      "graph_path": "data/graph/semantic_graph_bge_m3.sqlite",
+      "embedding_model": "bge-m3",
+      "similarity_threshold": 0.45,
+      "max_neighbors_per_chunk": 5
+    },
+    "llm_knowledge_graph": {
+      "kind": "llm_knowledge_graph",
+      "graph_path": "data/graph/knowledge_graph.sqlite",
+      "provider": "openai_compatible",
+      "base_url_env": "GRAPH_RAG_BASE_URL",
+      "api_key_env": "GRAPH_RAG_API_KEY",
+      "model_env": "GRAPH_RAG_MODEL",
+      "entity_types": ["組織", "制度", "政策", "指標", "法令", "人物"],
+      "relation_extraction": "json_triples",
+      "community_detection": "leiden",
+      "status": "planned"
+    }
+  }
+}

@@ -194,6 +194,10 @@ python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.js
 
 ## MLflowによる比較
 
+## グラフ構築方式の選択
+
+無料の埋め込み類似グラフと、将来のLLM知識グラフは[`config/graph_backends.json`](config/graph_backends.json)で分けています。構築方法、検索上の違い、API版へ進む際の設定は[`docs/graph-construction.md`](docs/graph-construction.md)を参照してください。
+
 ## フレームワーク実装の利用
 
 - **LangChain**：`RecursiveCharacterTextSplitter` によるチャンク化、Chroma連携
