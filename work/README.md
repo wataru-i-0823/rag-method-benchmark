@@ -157,15 +157,21 @@ uv run python -m rag_lab evaluate --profile cloud --chroma-path /mnt/rag/chroma 
 
 `--framework langchain`または`--framework llamaindex`で文書をチャンク化した場合、`--context-scope`で返却範囲を選べます。
 
-| 指定値 | 返す内容 |
+| `--context-scope` | 返す内容 |
 | --- | --- |
 | `chunk` | ヒットした小チャンクだけ（既定） |
-| `neighbors` | ヒットしたチャンクと前後のチャンク。`--neighbor-window 1`が既定 |
-| `parent` | ヒットしたチャンクの親文書全体 |
+| `parent` | 子チャンクへのヒットを起点に組み立てた親文脈 |
+
+`parent`のときだけ、親文脈の作り方を`--parent-strategy`で選びます。
+
+| 指定値 | 親文脈の作り方 |
+| --- | --- |
+| `neighbors` | ヒットした子チャンクと前後のチャンクを連結する（既定）。`--neighbor-window 1`が既定 |
+| `source` | 元の親文書（現在は取得元ページ）全体を返す |
 
 ```bash
 uv run python -m rag_lab inspect --profile colab --framework langchain \
-  --context-scope neighbors --neighbor-window 1 \
+  --context-scope parent --parent-strategy neighbors --neighbor-window 1 \
   --corpus data/processed/fsa_boj_public_information.jsonl \
   --query "物価安定の目標は何ですか" --method chroma_e5
 ```

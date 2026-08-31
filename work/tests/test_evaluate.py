@@ -32,5 +32,14 @@ class RetrievalTests(unittest.TestCase):
             Document("policy:0", "第3章 3-1章 休暇は上長の承認が必要です。", "規程"),
             Document("policy:1", "第3章 3-2章 経費の申請方法。", "規程"),
         ]
-        result = build_retriever("hybrid", chunks, context_scope="parent", parent_documents=[parent]).search("休暇の承認", 1)
+        result = build_retriever("hybrid", chunks, context_scope="parent", parent_strategy="source", parent_documents=[parent]).search("休暇の承認", 1)
         self.assertEqual(result[0].document.id, "policy")
+
+    def test_parent_context_can_join_neighboring_child_chunks(self):
+        chunks = [
+            Document("policy:0", "第3章 3-1章 休暇は上長の承認が必要です。", "規程"),
+            Document("policy:1", "第3章 3-2章 経費の申請方法。", "規程"),
+        ]
+        result = build_retriever("hybrid", chunks, context_scope="parent", parent_strategy="neighbors").search("休暇の承認", 1)
+        self.assertIn("休暇は上長の承認", result[0].document.text)
+        self.assertIn("経費の申請方法", result[0].document.text)

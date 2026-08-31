@@ -36,8 +36,9 @@ def main() -> None:
     evaluate_parser.add_argument("--profile", choices=sorted(PROFILES), default="local", help="Execution environment profile (default: local)")
     evaluate_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
     evaluate_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
-    evaluate_parser.add_argument("--context-scope", choices=["chunk", "neighbors", "parent"], default="chunk", help="Return only a hit, neighboring chunks, or its parent document")
-    evaluate_parser.add_argument("--neighbor-window", type=int, default=1, help="Number of chunks on each side for --context-scope neighbors")
+    evaluate_parser.add_argument("--context-scope", choices=["chunk", "parent"], default="chunk", help="Return a hit child chunk or parent context")
+    evaluate_parser.add_argument("--parent-strategy", choices=["neighbors", "source"], default="neighbors", help="Construct parent context from neighboring chunks or the source document")
+    evaluate_parser.add_argument("--neighbor-window", type=int, default=1, help="Number of chunks on each side for --parent-strategy neighbors")
     evaluate_parser.add_argument("--methods", help="Comma-separated methods; defaults to the selected profile")
     evaluate_parser.add_argument("--k", type=int, default=3)
     evaluate_parser.add_argument("--output", default="results")
@@ -52,7 +53,8 @@ def main() -> None:
     inspect_parser.add_argument("--profile", choices=sorted(PROFILES), default="local")
     inspect_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
     inspect_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
-    inspect_parser.add_argument("--context-scope", choices=["chunk", "neighbors", "parent"], default="chunk")
+    inspect_parser.add_argument("--context-scope", choices=["chunk", "parent"], default="chunk")
+    inspect_parser.add_argument("--parent-strategy", choices=["neighbors", "source"], default="neighbors")
     inspect_parser.add_argument("--neighbor-window", type=int, default=1)
     inspect_parser.add_argument("--framework", choices=["langchain", "llamaindex"], help="Chunk documents before retrieval")
     inspect_parser.add_argument("--method")
@@ -66,6 +68,7 @@ def main() -> None:
         "embedding_device": profile.embedding_device,
         "embedding_model": args.embedding_model or profile.embedding_model,
         "context_scope": args.context_scope,
+        "parent_strategy": args.parent_strategy,
         "neighbor_window": args.neighbor_window,
         "parent_documents": parent_documents,
     }

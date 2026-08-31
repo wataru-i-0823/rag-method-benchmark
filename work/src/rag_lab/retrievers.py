@@ -231,12 +231,13 @@ class Corpus2SkillRetriever(DenseRetriever):
 
 
 class ContextScopeRetriever:
-    """Expand a hit chunk into neighboring chunks or its parent source document."""
+    """Return either a hit child chunk or parent context constructed from it."""
 
-    def __init__(self, base: Retriever, documents: list[Document], parents: list[Document], scope: str, neighbor_window: int):
+    def __init__(self, base: Retriever, documents: list[Document], parents: list[Document], scope: str, parent_strategy: str, neighbor_window: int):
         self.base = base
         self.name = base.name
         self.scope = scope
+        self.parent_strategy = parent_strategy
         self.neighbor_window = neighbor_window
         self.documents = documents
         self.parents = {document.id: document for document in parents}
@@ -245,7 +246,7 @@ class ContextScopeRetriever:
         hits = self.base.search(query, k)
         if self.scope == "chunk":
             return hits
-        if self.scope == "parent":
+        if self.parent_strategy == "source":
             expanded: list[SearchResult] = []
             seen: set[str] = set()
             for hit in hits:
@@ -254,15 +255,26 @@ class ContextScopeRetriever:
                     expanded.append(SearchResult(self.parents[parent_id], hit.score))
                     seen.add(parent_id)
             return expanded
-        expanded = []
-        seen = set()
+        expanded: list[SearchResult] = []
+        seen: set[str] = set()
         for hit in hits:
             source_id, index = _chunk_location(hit.document.id)
-            for document in self.documents:
-                candidate_source, candidate_index = _chunk_location(document.id)
-                if candidate_source == source_id and candidate_index is not None and index is not None and abs(candidate_index - index) <= self.neighbor_window and document.id not in seen:
-                    expanded.append(SearchResult(document, hit.score))
-                    seen.add(document.id)
+            context_id = f"{hit.document.id}:context"
+            if index is None or context_id in seen:
+                continue
+            context_chunks = [
+                document for document in self.documents
+                if _chunk_location(document.id)[0] == source_id
+                and _chunk_location(document.id)[1] is not None
+                and abs(_chunk_location(document.id)[1] - index) <= self.neighbor_window
+            ]
+            context_chunks.sort(key=lambda document: _chunk_location(document.id)[1] or 0)
+            if context_chunks:
+                expanded.append(SearchResult(
+                    Document(context_id, "\n\n".join(document.text for document in context_chunks), hit.document.title),
+                    hit.score,
+                ))
+                seen.add(context_id)
         return expanded
 
 
@@ -287,6 +299,7 @@ def build_retriever(
     embedding_device: str | None = "auto",
     embedding_model: str | None = None,
     context_scope: str = "chunk",
+    parent_strategy: str = "neighbors",
     neighbor_window: int = 1,
     parent_documents: list[Document] | None = None,
 ) -> Retriever:
@@ -302,10 +315,14 @@ def build_retriever(
             retriever = options[name](documents)
         except KeyError as error:
             raise ValueError(f"Unknown method: {name}. Choose from {', '.join(options)}") from error
-    if context_scope not in {"chunk", "neighbors", "parent"}:
-        raise ValueError("context_scope must be one of: chunk, neighbors, parent")
+    if context_scope not in {"chunk", "parent"}:
+        raise ValueError("context_scope must be one of: chunk, parent")
+    if parent_strategy not in {"neighbors", "source"}:
+        raise ValueError("parent_strategy must be one of: neighbors, source")
+    if neighbor_window < 0:
+        raise ValueError("neighbor_window must be zero or greater")
     if context_scope != "chunk":
-        return ContextScopeRetriever(retriever, documents, parent_documents or documents, context_scope, neighbor_window)  # type: ignore[arg-type]
+        return ContextScopeRetriever(retriever, documents, parent_documents or documents, context_scope, parent_strategy, neighbor_window)  # type: ignore[arg-type]
     return retriever  # type: ignore[return-value]
 
 
