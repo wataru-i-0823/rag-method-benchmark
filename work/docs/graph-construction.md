@@ -29,7 +29,7 @@
 
 同義語を名寄せした後、エンティティ、関係、根拠チャンク、関係の確信度をSQLiteへ保存する。さらにLeiden法でコミュニティを作り、コミュニティ要約を生成すれば、局所探索と全体探索を分けられる。
 
-この方式はOpenAI互換APIなどのLLM APIを必要とする。キーは`.env`だけに置き、`GRAPH_RAG_API_KEY`、`GRAPH_RAG_BASE_URL`、`GRAPH_RAG_MODEL`で設定する。アプリ契約のChatGPT／ClaudeはAPIキーの代わりにはならない。
+この方式はOpenAI互換APIなどのLLM APIを必要とする。キーは`.env`だけに置き、`GRAPH_RAG_API_KEY`、`GRAPH_RAG_BASE_URL`、`GRAPH_RAG_MODEL`で設定する。アプリ契約のChatGPT／ClaudeはAPIキーの代わりにはならない。抽出・要約プロンプトは`config/prompts/`に分離し、設定ファイルから指定する。
 
 ## 切替
 

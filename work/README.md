@@ -198,6 +198,10 @@ python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.js
 
 無料の埋め込み類似グラフと、将来のLLM知識グラフは[`config/graph_backends.json`](config/graph_backends.json)で分けています。構築方法、検索上の違い、API版へ進む際の設定は[`docs/graph-construction.md`](docs/graph-construction.md)を参照してください。
 
+## LLMプロンプト
+
+HyDE、Reverse HyDE、根拠付き回答、Corpus2Skill、GraphRAG向けの日本語プロンプトは[`config/prompts/`](config/prompts/)で管理します。現時点の無料検索器は決定論的な代替実装を使うため、これらのプロンプトはAPIまたはColab上のローカルLLMを接続した時点で有効にします。利用変数と比較上の注意は[`config/prompts/README.md`](config/prompts/README.md)を参照してください。
+
 ## フレームワーク実装の利用
 
 - **LangChain**：`RecursiveCharacterTextSplitter` によるチャンク化、Chroma連携

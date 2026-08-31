@@ -25,6 +25,8 @@
       "entity_types": ["組織", "制度", "政策", "指標", "法令", "人物"],
       "relation_extraction": "json_triples",
       "community_detection": "leiden",
+      "triple_extraction_prompt": "config/prompts/graphrag_triple_extraction_ja.md",
+      "community_summary_prompt": "config/prompts/graphrag_community_summary_ja.md",
       "status": "planned"
     }
   }
