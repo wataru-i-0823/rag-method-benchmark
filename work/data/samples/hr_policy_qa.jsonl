@@ -1,0 +1,5 @@
+{"id":"hr-q1","question":"有給休暇の承認者は誰ですか？","relevant_ids":["leave-policy"]}
+{"id":"hr-q2","question":"高額な経費精算に必要なものは何ですか？","relevant_ids":["expense-policy"]}
+{"id":"hr-q3","question":"在宅勤務はいつまでに申請しますか？","relevant_ids":["remote-policy"]}
+{"id":"hr-q4","question":"社外への機密情報送信で必要な手続きは？","relevant_ids":["security-policy"]}
+{"id":"hr-q5","question":"初日にPCを受け取る場所はどこですか？","relevant_ids":["onboarding-policy"]}

@@ -9,6 +9,7 @@
 | `evaluation/` | 実データ向け質問・正解ラベル | しない |
 | `chroma/` | Chromaのローカル永続インデックス | しない |
 | 直下の `example_*.jsonl` | 動作確認用の架空データ | する |
+| `samples/` | 手法比較用の架空データセット | する |
 
 コーパスはJSONLで各行に `id`、`text`、任意で `title` を含めます。
 
@@ -23,3 +24,19 @@
 ```
 
 個人情報・APIキー・認証情報・社外秘文書はコミットしないでください。実行前に `git status --ignored` で除外状態を確認できます。
+
+## 比較用サンプル
+
+`samples/`には、各5文書・5質問から成る架空のデータセットを用意しています。
+
+- `hr_policy_*`: 人事規程。日本語の規程・承認フロー検索
+- `support_*`: SaaS問い合わせ対応。質問と回答根拠の検索
+- `operations_*`: 技術運用。数値・時間・手順の検索
+
+例:
+
+```bash
+uv run python -m rag_lab evaluate --profile local \
+  --corpus data/samples/support_corpus.jsonl \
+  --qa data/samples/support_qa.jsonl --mlflow
+```
