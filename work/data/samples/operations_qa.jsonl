@@ -1,5 +1,0 @@
-{"id":"ops-q1","question":"本番デプロイ前に必要な承認は何ですか？","relevant_ids":["deploy-runbook"]}
-{"id":"ops-q2","question":"重大障害時に何分以内にチャンネルを作りますか？","relevant_ids":["incident-runbook"]}
-{"id":"ops-q3","question":"バックアップは何日保持しますか？","relevant_ids":["backup-policy"]}
-{"id":"ops-q4","question":"緊急の本番アクセスで記録するものは？","relevant_ids":["access-policy"]}
-{"id":"ops-q5","question":"オンコールが応答しない場合の対応は？","relevant_ids":["monitoring-policy"]}

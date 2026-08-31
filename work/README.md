@@ -140,7 +140,7 @@ ChromaのインデックスはColabの一時ディスク上で毎回再構築し
 
 ```bash
 # 手元PC: APIキー・GPUなしで全体を動かす
-uv run python -m rag_lab evaluate --profile local --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl
+uv run python scripts/download_public_sources.py
 
 # Colab: E5を使う（Colabノートブックでは --extra colab をインストール済み）
 uv run python -m rag_lab evaluate --profile colab --corpus corpus.jsonl --qa qa.jsonl
@@ -150,13 +150,14 @@ uv run python -m rag_lab evaluate --profile cloud --chroma-path /mnt/rag/chroma 
 ```
 
 ```bash
-python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --k 3
+python -m rag_lab inspect --profile local --corpus data/processed/fsa_boj_public_information.jsonl \
+  --query "日本銀行の物価安定の目標は何ですか" --method hybrid
 ```
 
 CSV と JSON の結果を `results/` に保存します。
 
 ```bash
-python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl \
+python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.jsonl --qa data/evaluation/qa.jsonl \
   --methods bm25,dense,hybrid,advanced,agentic,graph,corpus2skill --k 3 --output results
 ```
 
@@ -173,15 +174,15 @@ python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_
 同一コーパスで分割方式を比較する例：
 
 ```bash
-uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --framework langchain
-uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --framework llamaindex
+uv run python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.jsonl --qa data/evaluation/qa.jsonl --framework langchain
+uv run python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.jsonl --qa data/evaluation/qa.jsonl --framework llamaindex
 ```
 
 MLflowを有効にすると、手法ごとにRecall@k、MRR、nDCG@k、平均レイテンシを記録します。コーパス本文はMLflowへ送らず、診断用の文書IDだけを保存します。
 
 ```bash
 uv sync
-uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --mlflow
+uv run python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.jsonl --qa data/evaluation/qa.jsonl --mlflow
 uv run mlflow ui --backend-store-uri mlruns
 ```
 
@@ -192,7 +193,7 @@ uv run mlflow ui --backend-store-uri mlruns
 検索経路を質問単位で追跡する場合は、`.env.example` を `.env` としてコピーし、**Gitに含めず** `LANGSMITH_API_KEY` を設定します。
 
 ```bash
-uv run python -m rag_lab evaluate --corpus data/example_corpus.jsonl --qa data/example_qa.jsonl --langsmith
+uv run python -m rag_lab evaluate --corpus data/processed/fsa_boj_public_information.jsonl --qa data/evaluation/qa.jsonl --langsmith
 ```
 
 MLflowは方式別の集計比較、LangSmithは個別質問の検索トレースと失敗分析に使います。
@@ -200,8 +201,8 @@ MLflowは方式別の集計比較、LangSmithは個別質問の検索トレー�
 特定の質問について、各方式が何を取得したかを確認できます。
 
 ```bash
-python -m rag_lab inspect --corpus data/example_corpus.jsonl \
-  --query "休暇申請の承認者は誰ですか" --method corpus2skill
+python -m rag_lab inspect --corpus data/processed/fsa_boj_public_information.jsonl \
+  --query "日本銀行はどのような業務を行いますか" --method corpus2skill
 ```
 
 ## 入力形式

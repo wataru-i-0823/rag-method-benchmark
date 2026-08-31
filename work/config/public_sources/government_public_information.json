@@ -1,0 +1,31 @@
+{
+  "dataset": "fsa-boj-public-information",
+  "description": "金融庁・日本銀行の公開情報。本文は実行時に取得し、Gitへ保存しない。",
+  "sources": [
+    {
+      "id": "fsa-nisa",
+      "title": "NISAを知る",
+      "url": "https://www.fsa.go.jp/policy/nisa2/know/index.html"
+    },
+    {
+      "id": "fsa-financial-literacy",
+      "title": "最低限身に付けるべき金融リテラシー",
+      "url": "https://www.fsa.go.jp/news/25/sonota/20131129-1.html"
+    },
+    {
+      "id": "boj-monetary-policy-outline",
+      "title": "金融政策の概要",
+      "url": "https://www.boj.or.jp/mopo/outline/"
+    },
+    {
+      "id": "boj-price-stability",
+      "title": "物価の安定と金融政策",
+      "url": "https://www.boj.or.jp/about/education/oshiete/seisaku/index.htm"
+    },
+    {
+      "id": "boj-central-bank-functions",
+      "title": "日本銀行はどのような業務を行っていますか？",
+      "url": "https://www.boj.or.jp/about/education/oshiete/outline/a02.htm"
+    }
+  ]
+}

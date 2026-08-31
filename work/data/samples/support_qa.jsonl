@@ -1,5 +1,0 @@
-{"id":"support-q1","question":"再設定メールのリンクはどれくらい有効ですか？","relevant_ids":["reset-password"]}
-{"id":"support-q2","question":"請求書はいつ発行されますか？","relevant_ids":["billing-invoice"]}
-{"id":"support-q3","question":"解約した直後に有料機能は使えなくなりますか？","relevant_ids":["cancel-plan"]}
-{"id":"support-q4","question":"API制限を超えたときの再試行方法は？","relevant_ids":["api-rate-limit"]}
-{"id":"support-q5","question":"エクスポートファイルのリンクの期限は？","relevant_ids":["data-export"]}
