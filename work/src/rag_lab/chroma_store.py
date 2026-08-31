@@ -57,7 +57,7 @@ class ChromaHashRetriever:
 
 
 class ChromaE5Retriever:
-    """Persistent Chroma retrieval using local multilingual-e5-small embeddings."""
+    """Persistent Chroma retrieval using a selectable local embedding model."""
 
     name = "chroma_e5"
 
@@ -65,12 +65,19 @@ class ChromaE5Retriever:
         self,
         documents: list[Document],
         path: str = "data/chroma",
-        collection_name: str = "rag_documents_e5_small",
-        model_name: str = "intfloat/multilingual-e5-small",
+        embedding_model: str = "e5-small",
         device: str | None = "auto",
     ):
         import chromadb
         from chromadb.config import Settings
+        model_configs = {
+            "e5-small": ("intfloat/multilingual-e5-small", "rag_documents_e5_small", "query: ", "passage: "),
+            "bge-m3": ("BAAI/bge-m3", "rag_documents_bge_m3", "", ""),
+        }
+        try:
+            model_name, collection_name, self.query_prefix, self.document_prefix = model_configs[embedding_model]
+        except KeyError as error:
+            raise ValueError("embedding_model must be one of: e5-small, bge-m3") from error
         self.documents = {document.id: document for document in documents}
         try:
             from sentence_transformers import SentenceTransformer
@@ -89,14 +96,14 @@ class ChromaE5Retriever:
 
     def _embed_documents(self, texts: list[str]) -> list[list[float]]:
         return self.model.encode(
-            [f"passage: {text}" for text in texts],
+            [f"{self.document_prefix}{text}" for text in texts],
             normalize_embeddings=True,
             show_progress_bar=False,
         ).tolist()
 
     def _embed(self, text: str) -> list[float]:
         return self.model.encode(
-            f"query: {text}", normalize_embeddings=True, show_progress_bar=False
+            f"{self.query_prefix}{text}", normalize_embeddings=True, show_progress_bar=False
         ).tolist()
 
     def _upsert(self, documents: list[Document]) -> None:

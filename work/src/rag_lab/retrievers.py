@@ -235,10 +235,11 @@ def build_retriever(
     documents: list[Document],
     chroma_path: str = "data/chroma",
     embedding_device: str | None = "auto",
+    embedding_model: str | None = None,
 ) -> Retriever:
     if name in {"chroma_e5", "chroma_local"}:
         from .chroma_store import ChromaE5Retriever
-        return ChromaE5Retriever(documents, path=chroma_path, device=embedding_device)  # type: ignore[return-value]
+        return ChromaE5Retriever(documents, path=chroma_path, device=embedding_device, embedding_model=embedding_model or "e5-small")  # type: ignore[return-value]
     if name == "chroma_hash":
         from .chroma_store import ChromaHashRetriever
         return ChromaHashRetriever(documents, path=chroma_path)  # type: ignore[return-value]

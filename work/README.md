@@ -33,6 +33,7 @@ Google Colabでは、`notebooks/rag_lab_colab.ipynb`を開きます。コーパ�
 | --- | --- |
 | TF-IDF | 依存なしの再現可能なベースライン |
 | `multilingual-e5-small` | Colab GPUで動かす本命の多言語埋め込み。クエリ／文書をE5推奨の接頭辞付きでベクトル化 |
+| `BAAI/bge-m3` | Colab GPUで使う長文対応の多言語埋め込み。最大8,192トークンを扱える比較対象 |
 
 ### 3. 検索データベース
 
@@ -144,6 +145,9 @@ uv run python scripts/download_public_sources.py
 
 # Colab: E5を使う（Colabノートブックでは --extra colab をインストール済み）
 uv run python -m rag_lab evaluate --profile colab --corpus corpus.jsonl --qa qa.jsonl
+
+# Colab: BGE-M3で同じコーパスを比較する
+uv run python -m rag_lab evaluate --profile colab --embedding-model bge-m3 --corpus corpus.jsonl --qa qa.jsonl
 
 # クラウド: Chroma永続領域を明示する
 uv run python -m rag_lab evaluate --profile cloud --chroma-path /mnt/rag/chroma --corpus corpus.jsonl --qa qa.jsonl

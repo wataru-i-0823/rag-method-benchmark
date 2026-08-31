@@ -35,6 +35,7 @@ def main() -> None:
     evaluate_parser.add_argument("--qa", required=True)
     evaluate_parser.add_argument("--profile", choices=sorted(PROFILES), default="local", help="Execution environment profile (default: local)")
     evaluate_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    evaluate_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
     evaluate_parser.add_argument("--methods", help="Comma-separated methods; defaults to the selected profile")
     evaluate_parser.add_argument("--k", type=int, default=3)
     evaluate_parser.add_argument("--output", default="results")
@@ -48,6 +49,7 @@ def main() -> None:
     inspect_parser.add_argument("--query", required=True)
     inspect_parser.add_argument("--profile", choices=sorted(PROFILES), default="local")
     inspect_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    inspect_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
     inspect_parser.add_argument("--method")
     inspect_parser.add_argument("--k", type=int, default=3)
     args = parser.parse_args()
@@ -56,6 +58,7 @@ def main() -> None:
     retriever_options = {
         "chroma_path": args.chroma_path or profile.chroma_path,
         "embedding_device": profile.embedding_device,
+        "embedding_model": args.embedding_model or profile.embedding_model,
     }
     if args.command == "evaluate":
         if args.framework:
