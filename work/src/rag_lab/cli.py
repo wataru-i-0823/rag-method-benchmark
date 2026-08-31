@@ -35,6 +35,7 @@ def main() -> None:
     evaluate_parser.add_argument("--qa", required=True)
     evaluate_parser.add_argument("--profile", choices=sorted(PROFILES), default="local", help="Execution environment profile (default: local)")
     evaluate_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    evaluate_parser.add_argument("--graph-path", default="data/graph/semantic_graph.sqlite", help="SQLite path for --method semantic_graph")
     evaluate_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
     evaluate_parser.add_argument("--context-scope", choices=["chunk", "parent"], default="chunk", help="Return a hit child chunk or parent context")
     evaluate_parser.add_argument("--parent-strategy", choices=["neighbors", "source"], default="neighbors", help="Construct parent context from neighboring chunks or the source document")
@@ -52,6 +53,7 @@ def main() -> None:
     inspect_parser.add_argument("--query", required=True)
     inspect_parser.add_argument("--profile", choices=sorted(PROFILES), default="local")
     inspect_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
+    inspect_parser.add_argument("--graph-path", default="data/graph/semantic_graph.sqlite")
     inspect_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
     inspect_parser.add_argument("--context-scope", choices=["chunk", "parent"], default="chunk")
     inspect_parser.add_argument("--parent-strategy", choices=["neighbors", "source"], default="neighbors")
@@ -65,6 +67,7 @@ def main() -> None:
     profile = get_profile(args.profile)
     retriever_options = {
         "chroma_path": args.chroma_path or profile.chroma_path,
+        "graph_path": args.graph_path,
         "embedding_device": profile.embedding_device,
         "embedding_model": args.embedding_model or profile.embedding_model,
         "context_scope": args.context_scope,

@@ -8,6 +8,20 @@
 | `processed/` | チャンク化・正規化済みコーパス | しない |
 | `evaluation/` | 実データ向け質問・正解ラベル | しない |
 | `chroma/` | Chromaのローカル永続インデックス | しない |
+| `graph/` | Semantic GraphのSQLite永続グラフ | しない |
+
+## 無料のSemantic Graphを構築する
+
+チャンク間の類似度からエッジを作り、SQLiteに保存します。APIキーは不要です。Colabでは`--embedding-model e5-small`または`bge-m3`を指定して検索と同じ埋め込みモデルを使えます。既定の`hash`はローカル学習用です。
+
+```bash
+uv run python scripts/build_semantic_graph.py \
+  --corpus data/processed/fsa_boj_public_information.jsonl \
+  --graph-path data/graph/semantic_graph.sqlite --embedding-model e5-small
+uv run python -m rag_lab inspect --corpus data/processed/fsa_boj_public_information.jsonl \
+  --method semantic_graph --graph-path data/graph/semantic_graph.sqlite \
+  --query "物価安定の目標は何ですか"
+```
 
 PDF原本は`raw/`に置きます。`scripts/ingest_pdfs.py`はまずPyMuPDFでPDF内部の文字を直接抽出し、文字が不足するページだけ任意でPaddleOCRを実行します。抽出済みJSONLも`processed/`に保存され、いずれもGit管理しません。
 

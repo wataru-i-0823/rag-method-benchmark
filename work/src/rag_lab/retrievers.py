@@ -181,6 +181,26 @@ class GraphRetriever(HybridRetriever):
         return sorted(expanded, key=lambda item: item.score, reverse=True)[:k]
 
 
+class SemanticGraphRetriever(HybridRetriever):
+    """Hybrid retrieval expanded through a persisted, free semantic graph."""
+    name = "semantic_graph"
+
+    def __init__(self, documents: list[Document], graph_path: str = "data/graph/semantic_graph.sqlite"):
+        super().__init__(documents)
+        self.graph_path = graph_path
+
+    def search(self, query: str, k: int = 5) -> list[SearchResult]:
+        from .semantic_graph import graph_neighbors
+
+        base_results = super().search(query, len(self.documents))
+        scores = {result.document.id: 0.8 * result.score for result in base_results}
+        for seed in base_results[:max(1, k)]:
+            for neighbor_id, similarity in graph_neighbors(self.graph_path, seed.document.id):
+                scores[neighbor_id] = scores.get(neighbor_id, 0.0) + 0.2 * seed.score * similarity
+        lookup = {document.id: document for document in self.documents}
+        return [SearchResult(lookup[id_], score) for id_, score in sorted(scores.items(), key=lambda item: item[1], reverse=True)[:k]]
+
+
 @dataclass
 class SkillNode:
     label: str
@@ -298,6 +318,7 @@ def build_retriever(
     chroma_path: str = "data/chroma",
     embedding_device: str | None = "auto",
     embedding_model: str | None = None,
+    graph_path: str = "data/graph/semantic_graph.sqlite",
     context_scope: str = "chunk",
     parent_strategy: str = "neighbors",
     neighbor_window: int = 1,
@@ -312,7 +333,7 @@ def build_retriever(
     elif name not in {"chroma_e5", "chroma_local"}:
         options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, LangGraphAgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
         try:
-            retriever = options[name](documents)
+            retriever = SemanticGraphRetriever(documents, graph_path) if name == "semantic_graph" else options[name](documents)
         except KeyError as error:
             raise ValueError(f"Unknown method: {name}. Choose from {', '.join(options)}") from error
     if context_scope not in {"chunk", "parent"}:

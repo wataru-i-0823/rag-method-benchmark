@@ -54,6 +54,7 @@ Google Colabでは、`notebooks/rag_lab_colab.ipynb`を開きます。コーパ�
 | `hyde` | 検索時に仮想文書を生成してDense検索 |
 | `reverse_hyde` | 文書ごとの仮想質問を事前生成して検索 |
 | `graph` | エンティティ共有グラフで候補を拡張 |
+| `semantic_graph` | 無料のSQLite永続グラフをたどり、類似チャンクを候補拡張 |
 | `corpus2skill` | 階層スキルツリーを探索 |
 | `chroma_e5` | `multilingual-e5-small` で埋め込んだChroma永続Dense検索 |
 
