@@ -230,24 +230,83 @@ class Corpus2SkillRetriever(DenseRetriever):
         return chosen or all_results[:k]
 
 
+class ContextScopeRetriever:
+    """Expand a hit chunk into neighboring chunks or its parent source document."""
+
+    def __init__(self, base: Retriever, documents: list[Document], parents: list[Document], scope: str, neighbor_window: int):
+        self.base = base
+        self.name = base.name
+        self.scope = scope
+        self.neighbor_window = neighbor_window
+        self.documents = documents
+        self.parents = {document.id: document for document in parents}
+
+    def search(self, query: str, k: int = 5) -> list[SearchResult]:
+        hits = self.base.search(query, k)
+        if self.scope == "chunk":
+            return hits
+        if self.scope == "parent":
+            expanded: list[SearchResult] = []
+            seen: set[str] = set()
+            for hit in hits:
+                parent_id = _source_id(hit.document.id)
+                if parent_id not in seen and parent_id in self.parents:
+                    expanded.append(SearchResult(self.parents[parent_id], hit.score))
+                    seen.add(parent_id)
+            return expanded
+        expanded = []
+        seen = set()
+        for hit in hits:
+            source_id, index = _chunk_location(hit.document.id)
+            for document in self.documents:
+                candidate_source, candidate_index = _chunk_location(document.id)
+                if candidate_source == source_id and candidate_index is not None and index is not None and abs(candidate_index - index) <= self.neighbor_window and document.id not in seen:
+                    expanded.append(SearchResult(document, hit.score))
+                    seen.add(document.id)
+        return expanded
+
+
+def _source_id(document_id: str) -> str:
+    return document_id.rsplit(":", 1)[0] if ":" in document_id else document_id
+
+
+def _chunk_location(document_id: str) -> tuple[str, int | None]:
+    source_id = _source_id(document_id)
+    if source_id == document_id:
+        return source_id, None
+    try:
+        return source_id, int(document_id.rsplit(":", 1)[1])
+    except ValueError:
+        return source_id, None
+
+
 def build_retriever(
     name: str,
     documents: list[Document],
     chroma_path: str = "data/chroma",
     embedding_device: str | None = "auto",
     embedding_model: str | None = None,
+    context_scope: str = "chunk",
+    neighbor_window: int = 1,
+    parent_documents: list[Document] | None = None,
 ) -> Retriever:
     if name in {"chroma_e5", "chroma_local"}:
         from .chroma_store import ChromaE5Retriever
-        return ChromaE5Retriever(documents, path=chroma_path, device=embedding_device, embedding_model=embedding_model or "e5-small")  # type: ignore[return-value]
+        retriever = ChromaE5Retriever(documents, path=chroma_path, device=embedding_device, embedding_model=embedding_model or "e5-small")  # type: ignore[assignment]
     if name == "chroma_hash":
         from .chroma_store import ChromaHashRetriever
-        return ChromaHashRetriever(documents, path=chroma_path)  # type: ignore[return-value]
-    options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, LangGraphAgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
-    try:
-        return options[name](documents)
-    except KeyError as error:
-        raise ValueError(f"Unknown method: {name}. Choose from {', '.join(options)}") from error
+        retriever = ChromaHashRetriever(documents, path=chroma_path)  # type: ignore[assignment]
+    elif name not in {"chroma_e5", "chroma_local"}:
+        options = {cls.name: cls for cls in (BM25Retriever, DenseRetriever, HyDERetriever, ReverseHyDERetriever, HybridRetriever, AdvancedRetriever, AgenticRetriever, LangGraphAgenticRetriever, GraphRetriever, Corpus2SkillRetriever)}
+        try:
+            retriever = options[name](documents)
+        except KeyError as error:
+            raise ValueError(f"Unknown method: {name}. Choose from {', '.join(options)}") from error
+    if context_scope not in {"chunk", "neighbors", "parent"}:
+        raise ValueError("context_scope must be one of: chunk, neighbors, parent")
+    if context_scope != "chunk":
+        return ContextScopeRetriever(retriever, documents, parent_documents or documents, context_scope, neighbor_window)  # type: ignore[arg-type]
+    return retriever  # type: ignore[return-value]
 
 
 def _top(documents: list[Document], scores: Iterable[float], k: int) -> list[SearchResult]:

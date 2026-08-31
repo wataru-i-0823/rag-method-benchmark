@@ -153,6 +153,23 @@ uv run python -m rag_lab evaluate --profile colab --embedding-model bge-m3 --cor
 uv run python -m rag_lab evaluate --profile cloud --chroma-path /mnt/rag/chroma --corpus corpus.jsonl --qa qa.jsonl
 ```
 
+### 取得後に返す文脈を選ぶ
+
+`--framework langchain`または`--framework llamaindex`で文書をチャンク化した場合、`--context-scope`で返却範囲を選べます。
+
+| 指定値 | 返す内容 |
+| --- | --- |
+| `chunk` | ヒットした小チャンクだけ（既定） |
+| `neighbors` | ヒットしたチャンクと前後のチャンク。`--neighbor-window 1`が既定 |
+| `parent` | ヒットしたチャンクの親文書全体 |
+
+```bash
+uv run python -m rag_lab inspect --profile colab --framework langchain \
+  --context-scope neighbors --neighbor-window 1 \
+  --corpus data/processed/fsa_boj_public_information.jsonl \
+  --query "物価安定の目標は何ですか" --method chroma_e5
+```
+
 ```bash
 python -m rag_lab inspect --profile local --corpus data/processed/fsa_boj_public_information.jsonl \
   --query "日本銀行の物価安定の目標は何ですか" --method hybrid

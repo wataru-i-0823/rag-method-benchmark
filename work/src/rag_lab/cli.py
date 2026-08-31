@@ -36,6 +36,8 @@ def main() -> None:
     evaluate_parser.add_argument("--profile", choices=sorted(PROFILES), default="local", help="Execution environment profile (default: local)")
     evaluate_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
     evaluate_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
+    evaluate_parser.add_argument("--context-scope", choices=["chunk", "neighbors", "parent"], default="chunk", help="Return only a hit, neighboring chunks, or its parent document")
+    evaluate_parser.add_argument("--neighbor-window", type=int, default=1, help="Number of chunks on each side for --context-scope neighbors")
     evaluate_parser.add_argument("--methods", help="Comma-separated methods; defaults to the selected profile")
     evaluate_parser.add_argument("--k", type=int, default=3)
     evaluate_parser.add_argument("--output", default="results")
@@ -50,15 +52,22 @@ def main() -> None:
     inspect_parser.add_argument("--profile", choices=sorted(PROFILES), default="local")
     inspect_parser.add_argument("--chroma-path", help="Chroma index path; overrides the selected profile")
     inspect_parser.add_argument("--embedding-model", choices=["e5-small", "bge-m3"], help="Embedding model for chroma_e5; defaults to the selected profile")
+    inspect_parser.add_argument("--context-scope", choices=["chunk", "neighbors", "parent"], default="chunk")
+    inspect_parser.add_argument("--neighbor-window", type=int, default=1)
+    inspect_parser.add_argument("--framework", choices=["langchain", "llamaindex"], help="Chunk documents before retrieval")
     inspect_parser.add_argument("--method")
     inspect_parser.add_argument("--k", type=int, default=3)
     args = parser.parse_args()
     documents = load_documents(args.corpus)
+    parent_documents = documents
     profile = get_profile(args.profile)
     retriever_options = {
         "chroma_path": args.chroma_path or profile.chroma_path,
         "embedding_device": profile.embedding_device,
         "embedding_model": args.embedding_model or profile.embedding_model,
+        "context_scope": args.context_scope,
+        "neighbor_window": args.neighbor_window,
+        "parent_documents": parent_documents,
     }
     if args.command == "evaluate":
         if args.framework:
@@ -73,6 +82,9 @@ def main() -> None:
             log_experiment(rows=rows, summary=summary, corpus_path=args.corpus, qa_path=args.qa, tracking_uri=args.tracking_uri, experiment_name=args.experiment)
         print(json.dumps(summary, ensure_ascii=False, indent=2))
     else:
+        if args.framework:
+            from .frameworks import framework_documents
+            documents = framework_documents(documents, args.framework)
         method = args.method or ("chroma_e5" if args.profile in {"colab", "cloud"} else "hybrid")
         results = build_retriever(method, documents, **retriever_options).search(args.query, args.k)
         print(json.dumps([{"id": result.document.id, "title": result.document.title, "score": round(result.score, 4), "text": result.document.text} for result in results], ensure_ascii=False, indent=2))

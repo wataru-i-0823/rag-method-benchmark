@@ -25,3 +25,12 @@ class RetrievalTests(unittest.TestCase):
     def test_local_chroma_profile_uses_persistent_vector_store(self):
         results = build_retriever("chroma_hash", DOCUMENTS, chroma_path="/tmp/rag_lab_test_chroma").search("休暇の承認", 1)
         self.assertEqual(results[0].document.id, "leave")
+
+    def test_parent_context_returns_the_source_document(self):
+        parent = Document("policy", "第3章全体の本文", "規程")
+        chunks = [
+            Document("policy:0", "第3章 3-1章 休暇は上長の承認が必要です。", "規程"),
+            Document("policy:1", "第3章 3-2章 経費の申請方法。", "規程"),
+        ]
+        result = build_retriever("hybrid", chunks, context_scope="parent", parent_documents=[parent]).search("休暇の承認", 1)
+        self.assertEqual(result[0].document.id, "policy")
